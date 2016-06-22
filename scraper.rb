@@ -24,7 +24,7 @@ end
 
 def date_from(text)
   return if text.to_s.empty?
-  Date.parse(text).to_s rescue nil # warn "Odd date: #{text}"
+  date = Date.parse(text) rescue nil # warn "Odd date: #{text}"
 end
 
 def scrape_term(term, url)
@@ -54,11 +54,14 @@ def scrape_person(r)
   mandates = box.xpath('.//div[@class="bioOutrosTitulo"][contains(.,"Mandatos (na C")]/following-sibling::div[1]').text
   # TODO get all the other fields here
 
+  dob = date_from(box.xpath('.//span[contains(.,"Nascimento:")]/following-sibling::strong[1]').text)
+  dob = '' if dob && dob.year > 2010 # mis-parsed date
+
   data = { 
     id: r['id'],
     fullname: box.css('div.bioDetalhes strong').map { |t| t.text.tidy }.first,
-    birth_date: date_from(box.xpath('.//span[contains(.,"Nascimento:")]/following-sibling::strong[1]').text),
-    death_date: date_from(box.xpath('.//span[contains(.,"Nascimento:")]/following-sibling::strong[1]').text),
+    birth_date: dob.to_s,
+    # death_date: date_from(box.xpath('.//span[contains(.,"Nascimento:")]/following-sibling::strong[1]').text),
     img: box.css('.bioFoto img/@src').text,
     mandates: mandates,
     source: r['source']
